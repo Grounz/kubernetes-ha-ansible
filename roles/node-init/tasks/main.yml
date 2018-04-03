@@ -1,0 +1,21 @@
+---
+- name: transfer script for join kubernetes cluster
+  copy:
+    src: ../../master-init/files/join-kube.sh
+    dest: /root/join-kube.sh
+    owner: root
+    group: root
+
+- name: exec script
+  command: sh /root/join-kube.sh
+
+- name: sleep for wait initialization
+  command: sleep 60
+
+- name: replace ip address with loadbalancer ip
+  command: sed -i 's/server':' https':'\/\/*.*.*.*':'6443/server':' https':'\/\/{{ virtual_ip }}':'6443/g' /etc/kubernetes/kubelet.conf
+
+- name: systemctl restart kubelet
+  systemd:
+    name: kubelet
+    state: restarted

@@ -1,0 +1,75 @@
+---
+- name: get cfssljson
+  get_url:
+    url: "{{ item }}"
+    dest: "/usr/local/bin/cfssljson"
+    mode: 0755
+  with_items:
+    - "https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64"
+
+- name: get cfssl
+  get_url:
+    url: "{{ item }}"
+    dest: "/usr/local/bin/cfssl"
+    mode: 0755
+  with_items:
+    - "https://pkg.cfssl.org/R1.2/cfssl_linux-amd64"
+    
+- name: copy kubernetes repo
+  template:
+    src: ../../templates/kubernetes.repo
+    dest: /etc/yum.repos.d/kubernetes.repo
+
+- name: copy selinux template
+  template:
+    src: ../../templates/selinux
+    dest: /etc/sysconfig/selinux
+
+- name: Disable Firewalld at boot
+  systemd:
+    name: firewalld
+    enabled: no
+
+- name: Stop firewalld
+  systemd:
+    name: firewalld
+    state: stopped
+
+- name: Restart docker
+  systemd:
+    name: docker
+    state: restarted
+
+- name: install kubeadm
+  yum:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - kubeadm
+    - kubectl
+    - kubelet
+
+- name: Remove swapfile from /etc/fstab
+  mount:
+    name: swap
+    fstype: swap
+    state: absent
+
+- name: sysctl configuration for RHEL7/CentOS7
+  template:
+    src: ../../templates/k8s.conf
+    dest: /etc/sysctl.d/k8s.conf
+
+- name: reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: enable kubelet starting at boot
+  systemd:
+    name: kubelet
+    enabled: yes
+
+- name: start kubelet
+  systemd:
+    name: kubelet
+    state: started

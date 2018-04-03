@@ -1,0 +1,56 @@
+---
+- name: update
+  yum:
+    name: "*"
+    state: latest
+
+- name: Install prequisite packages for docker
+  yum:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - yum-utils
+    - device-mapper-persistent-data
+    - lvm2
+    - libtool-ltdl
+    - policycoreutils-python
+    - rsync
+  when: (ansible_distribution == "CentOS")
+
+- name: get docker rpm file
+  get_url:
+    url: "https://download.docker.com/linux/centos/7/x86_64/stable/Packages/{{ item }}"
+    dest: "/root/{{ item }}"
+    mode: 0440
+  with_items:
+    - "{{ docker_ce_package }}"
+    - "{{ docker_ce_selinux_package }}"
+
+- name: install docker-ce-selinux & docker-ce packages
+  yum:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - "/root/{{ docker_ce_selinux_package }}"
+    - "/root/{{ docker_ce_package }}"
+
+- name: Active docker at boot
+  systemd:
+    name: docker
+    enabled: yes
+
+- name: Start docker
+  systemd:
+    name: docker
+    state: started
+
+- name: Create /etc/docker directory if doesn't exist
+  file:
+    path: /etc/docker
+    state: directory
+    mode: 0755
+
+- name: copy docker daemon.json
+  template:
+    src: ../../templates/daemon.json
+    dest: /etc/docker/daemon.json

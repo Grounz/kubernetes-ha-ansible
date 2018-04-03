@@ -1,0 +1,59 @@
+---
+- hosts: all
+  become: true
+  connection: local
+  roles:
+    - { role: docker, tags: ['docker', 'all-in', 'all']}
+    - { role: configuration, tags: ['configuration', 'all-in', 'all']}
+
+- hosts: Master-1
+  roles:
+    - { role: etcd, tags: ['etcd-master-1', 'master-1-all', 'all-in', 'all']}
+
+- hosts: Master
+  vars:
+    hostname_master_1: "Master-1"
+    hostname_master_2: "Master-2"
+    hostname_master_3: "Master-3"
+    master_1_ip: "172.16.1.29"
+    master_2_ip: "172.16.1.26"
+    master_3_ip: "172.16.1.28"
+    virtual_ip: "172.16.1.37"
+    interface: "enp0s3"
+    priority_1: 101
+    priority_2: 100
+    state_master: "master"
+    state_backup: "BACKUP"
+    auth_pass: "4be37dc3b4c90194d1600c483e10ad1d"
+    pod_network_cidr: "10.244.0.0/16"
+    etcd_version: "v3.1.12"
+  roles:
+   - { role: etcd-conf, tags: ['etcd-conf-master', 'master', 'all-in','all']}
+   - { role: etcd-install-systemd, tags: ['etcd-install-master', 'master', 'all-in', 'all']}
+   - { role: keepalived, tags: [' keepalived-master', 'master', 'all-in', 'all']}
+   - { role: master-init, tags: ['master-init', 'master', 'all-in', 'all']}
+
+#- hosts: Master-1
+#  vars:
+#    hostname_master_2: Master-2
+#    hostname_master_3: Master-3
+#    hostname_master_1: Master-1
+#  roles:
+#    - { role: etcd, tags: ['etcd-master-1', 'master-1-all', 'all-in', 'all']}
+
+
+#- hosts: Master-2-3
+#  vars:
+#    hostname_master_2: Master-2
+#    hostname_master_3: Master-3
+#    hostname_master_1: Master-1
+#  roles:
+#    - { role: etcd-conf, tags: ['etcd-conf', 'master-2-3-all', 'all-in', 'all']}
+
+#- hosts: node
+#  become: true
+#  connection: local
+#  roles:
+#    - { role: docker, tags: ['docker',  'node-all', 'all-in', 'all']}
+#    - { role: configuration, tags: ['configuration', 'node-all', 'all-in', 'all']}
+#    - { role: node-init, tags: ['node-init', 'node-all', 'all']}

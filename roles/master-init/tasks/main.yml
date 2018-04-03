@@ -1,0 +1,129 @@
+---
+- name: reboot the server
+  shell: sleep 2 && shutdown -r now
+  async: 1
+  poll: 0
+
+- name: Wait for server come back
+  wait_for: host={{ inventory_hostname }} port=22 delay=15 timeout=600
+  delegate_to: localhost
+
+- name: copy config.yaml template
+  template:
+    src: ../templates/config.yaml
+    dest: /root/config.yaml
+
+- name: init kubernetes master-1
+  shell: kubeadm init --config=/root/config.yaml > /root/master-init.log
+  when:
+    - ansible_hostname == "{{ hostname_master_1 }}"
+
+- name: get command for node insertion in cluster
+  synchronize:
+    mode: pull
+    src: /root/master-init.log
+    dest: ../files/master-init.log
+  when:
+    - ansible_hostname == "{{ hostname_master_1 }}"
+
+- name: synchronize pki cert
+  synchronize:
+    src: /etc/kubernetes/pki/{{ item }}
+    dest: ../files/certs/
+    mode: pull
+  with_items:
+    - ca.crt
+    - ca.key
+    - sa.key
+    - sa.pub
+  when:
+    - ansible_hostname == "{{ hostname_master_1 }}"
+
+- name: synchronize kubelet config
+  synchronize:
+    src: /etc/kubernetes/{{ item }}
+    dest: ../files/kubelet/
+    mode: pull
+  with_items:
+    - admin.conf
+    - controller-manager.conf
+    - kubelet.conf
+    - scheduler.conf
+  when:
+    - ansible_hostname == "{{ hostname_master_1 }}"
+
+- name: synchronize pki cert
+  synchronize:
+    src: ../files/kubelet/{{ item }}
+    dest: /etc/kubernetes/
+    mode: push
+  with_items:
+    - admin.conf
+    - controller-manager.conf
+    - kubelet.conf
+    - scheduler.conf
+  when:
+    - ansible_hostname == "{{ hostname_master_2 }}" or ansible_hostname == "{{ hostname_master_3 }}"
+
+- name: copy certificate file
+  synchronize:
+    src: ../files/certs/*
+    dest: /etc/kubernetes/pki/
+    mode: push
+  when:
+    - ansible_hostname == "{{ hostname_master_2 }}" or ansible_hostname == "{{ hostname_master_3 }}"
+
+- name: init kubernetes master 2-3
+  command: kubeadm init --config=/root/config.yaml
+  when:
+    - ansible_hostname == "{{ hostname_master_2 }}" or ansible_hostname == "{{ hostname_master_3 }}"
+
+- name:  create kubernetes repository
+  file:
+    path: /root/.kube
+    state: directory
+    mode: 0755
+
+- name: copy file
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+    mode: 0755
+    remote_src: yes
+
+- name: install flannel pod network
+  command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml
+  when:
+    - ansible_hostname == "{{ hostname_master_1 }}"
+
+- name: export kube-proxy configmap
+  shell: kubectl get configmap -n kube-system kube-proxy -o yaml > /root/kube-proxy-cm.yaml
+  when:
+    - ansible_hostname == "{{ hostname_master_1 }}"
+
+- name: replace ip address with loadbalancer ip
+  shell: sed -i 's/"server':' https':'\/\/*.*.*.*':'6443"/"server':' https':'\/\/{{ virtual_ip }}':'6443"/g' /root/kube-proxy-cm.yaml
+  when:
+    - ansible_hostname == "{{ hostname_master_1 }}"
+
+- name: apply new config
+  command: kubectl apply -f /root/kube-proxy-cm.yaml --force
+  when:
+    - ansible_hostname == "{{ hostname_master_1 }}"
+
+- name: restart all kube-proxy, ensure that they load the new configmap
+  command: kubectl delete pod -n kube-system -l k8s-app=kube-proxy
+  when:
+    - ansible_hostname == "{{ hostname_master_1 }}"
+
+- name: Enable pod on master
+  command: kubectl taint nodes --all node-role.kubernetes.io/master-
+  when:
+    - ansible_hostname == "{{ hostname_master_1 }}"
+#- name: copy dashboard template
+#  template:
+#    src: ../../templates/kubernetes-dashboard.yaml
+#    dest: /root/kubernetes-dashboard.yaml
+
+#- name: deploy dashboard
+#  shell: kubectl apply -f /root/kubernetes-dashboard.yaml

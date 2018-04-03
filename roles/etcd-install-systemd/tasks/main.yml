@@ -1,0 +1,46 @@
+---
+- name: get etcd binaries
+  get_url:
+    url: https://github.com/coreos/etcd/releases/download/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-amd64.tar.gz
+    dest: /root/etcd-{{ etcd_version }}-linux-amd64.tar.gz
+    mode: 0440
+
+- name: untar etcd
+  unarchive:
+    src: /root/etcd-{{ etcd_version }}-linux-amd64.tar.gz
+    dest: /root/
+    remote_src: yes
+
+- name: copy etcdctl & etcd
+  copy:
+    src: /root/etcd-{{ etcd_version }}-linux-amd64/{{ item }}
+    dest: /usr/local/bin/{{ item }}
+    remote_src: yes
+    mode: 0755
+  with_items:
+    - "etcdctl"
+    - "etcd"
+
+- name: remove old etcd file in /root
+  file:
+    path: /root/etcd*
+    state: absent
+
+- name: copy etcd env file
+  template:
+    src: ../templates/etcd.env
+    dest: /etc/etcd.env
+
+- name: copy systemd etcd Service
+  template:
+    src: ../templates/etcd.service
+    dest: /etc/systemd/system/etcd.service
+
+- name: enable etcd
+  systemd:
+    name: etcd
+    enabled: yes
+
+- name: reload systemd
+  systemd:
+    daemon_reload: yes

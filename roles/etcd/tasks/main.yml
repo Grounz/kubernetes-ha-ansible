@@ -1,0 +1,28 @@
+---
+- name: Create /etc/kubernetes/pki/etcd directory if doesn't exist
+  file:
+    path: /etc/kubernetes/pki/etcd
+    state: directory
+    mode: 0755
+
+- name: copy ca-config.json
+  template:
+    src: ../templates/{{ item }}
+    dest: /etc/kubernetes/pki/etcd/{{ item }}
+    mode: 0755
+  with_items:
+    - "ca-config.json"
+    - "ca-csr.json"
+    - "client.json"
+
+- name: generate ca-certs
+  shell: cd /etc/kubernetes/pki/etcd/ && cfssl gencert -initca ca-csr.json | cfssljson -bare ca -
+
+- name: generate client.pem and client-key.pem
+  shell: cd /etc/kubernetes/pki/etcd/ && cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client client.json | cfssljson -bare client
+
+- name: get files for other master
+  synchronize:
+    mode: pull
+    src: "/etc/kubernetes/pki/etcd/*"
+    dest: "../files/"

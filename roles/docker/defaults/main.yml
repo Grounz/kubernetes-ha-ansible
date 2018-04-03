@@ -1,0 +1,4 @@
+---
+docker_version: docker-ce-17.03.2.ce-1.el7.centos
+docker_ce_package: docker-ce-17.03.2.ce-1.el7.centos.x86_64.rpm
+docker_ce_selinux_package: docker-ce-selinux-17.03.2.ce-1.el7.centos.noarch.rpm

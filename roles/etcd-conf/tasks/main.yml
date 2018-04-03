@@ -1,0 +1,24 @@
+---
+- name: create kubernetes repository
+  file:
+    path: /etc/kubernetes/pki/etcd
+    state: directory
+    mode: 0755
+  when:
+    - ansible_hostname == "{{ hostname_master_2 }}" or ansible_hostname == "{{ hostname_master_3 }}"
+
+- name: get files for other master
+  synchronize:
+    mode: push
+    src: "../../etcd/files/"
+    dest: "/etc/kubernetes/pki/etcd/"
+  when:
+    - ansible_hostname == "{{ hostname_master_2 }}" or ansible_hostname == "{{ hostname_master_3 }}"
+
+- name: copy config.json generate with cfssl prints defaults csr
+  template:
+    src: ../templates/config.json
+    dest: /etc/kubernetes/pki/etcd/config.json
+
+- name: generating certs
+  shell: cd /etc/kubernetes/pki/etcd && cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=server config.json | cfssljson -bare server && cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=peer config.json | cfssljson -bare peer

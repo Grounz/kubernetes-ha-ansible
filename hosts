@@ -1,0 +1,21 @@
+[all]
+172.16.1.29 ansible_user=root ansible_connection=ssh ansible_hostname=Master-1
+172.16.1.26 ansible_user=root ansible_connection=ssh ansible_hostname=Master-2
+172.16.1.28 ansible_user=root ansible_connection=ssh ansible_hostname=Master-3
+
+[Master]
+172.16.1.29 ansible_user=root ansible_connection=ssh ansible_hostname=Master-1
+172.16.1.26 ansible_user=root ansible_connection=ssh ansible_hostname=Master-2
+172.16.1.28 ansible_user=root ansible_connection=ssh ansible_hostname=Master-3
+
+[Master-1]
+172.16.1.29 ansible_user=root ansible_connection=ssh ansible_hostname=Master-1
+
+[Master-2-3]
+172.16.1.26 ansible_user=root ansible_connection=ssh ansible_hostname=Master-2
+172.16.1.28 ansible_user=root ansible_connection=ssh ansible_hostname=Master-3
+
+[node]
+#172.16.1.23 ansible_user=root ansible_connection=ssh ansible_hostname=node-1
+#172.16.1.25 ansible_user=root ansible_connection=ssh ansible_hostname=node-2
+# ajouter des nodes si besoin

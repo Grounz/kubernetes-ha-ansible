@@ -1,0 +1,27 @@
+---
+- name: install keepalived
+  yum:
+    name: keepalived
+    state: latest
+
+- name: backup keepalived.config
+  copy:
+    src: /etc/keepalived/keepalived.conf
+    dest: /etc/keepalived/keepalived.conf.bak
+    remote_src: yes
+    mode: 0755
+
+- name: copy keepalived.conf
+  template:
+    src: ../templates/keepalived.conf
+    dest: /etc/keepalived/keepalived.conf
+
+- name: copy check_apiserver
+  template:
+    src: ../templates/check_apiserver.sh
+    dest: /etc/keepalived/check_apiserver.sh
+
+- name: enable keepalived
+  systemd:
+    name: keepalived
+    enabled: yes
