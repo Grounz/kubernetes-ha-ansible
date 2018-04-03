@@ -21,15 +21,15 @@
 - name: get command for node insertion in cluster
   synchronize:
     mode: pull
-    src: /root/master-init.log
-    dest: ../files/master-init.log
+    src: "/root/master-init.log"
+    dest: "../files/"
   when:
     - ansible_hostname == "{{ hostname_master_1 }}"
 
-- name: synchronize pki cert
+- name: synchronize pki files
   synchronize:
-    src: /etc/kubernetes/pki/{{ item }}
-    dest: ../files/certs/
+    src: "/etc/kubernetes/pki/{{ item }}"
+    dest: "../files/pki/"
     mode: pull
   with_items:
     - ca.crt
@@ -39,37 +39,15 @@
   when:
     - ansible_hostname == "{{ hostname_master_1 }}"
 
-- name: synchronize kubelet config
-  synchronize:
-    src: /etc/kubernetes/{{ item }}
-    dest: ../files/kubelet/
-    mode: pull
+- name: copy pki files
+  copy:
+    src: "../files/pki/{{ item }}"
+    dest: "/etc/kubernetes/pki/"
   with_items:
-    - admin.conf
-    - controller-manager.conf
-    - kubelet.conf
-    - scheduler.conf
-  when:
-    - ansible_hostname == "{{ hostname_master_1 }}"
-
-- name: synchronize pki cert
-  synchronize:
-    src: ../files/kubelet/{{ item }}
-    dest: /etc/kubernetes/
-    mode: push
-  with_items:
-    - admin.conf
-    - controller-manager.conf
-    - kubelet.conf
-    - scheduler.conf
-  when:
-    - ansible_hostname == "{{ hostname_master_2 }}" or ansible_hostname == "{{ hostname_master_3 }}"
-
-- name: copy certificate file
-  synchronize:
-    src: ../files/certs/*
-    dest: /etc/kubernetes/pki/
-    mode: push
+    - ca.crt
+    - ca.key
+    - sa.key
+    - sa.pub
   when:
     - ansible_hostname == "{{ hostname_master_2 }}" or ansible_hostname == "{{ hostname_master_3 }}"
 
@@ -78,7 +56,7 @@
   when:
     - ansible_hostname == "{{ hostname_master_2 }}" or ansible_hostname == "{{ hostname_master_3 }}"
 
-- name:  create kubernetes repository
+- name: create kubernetes home repository config
   file:
     path: /root/.kube
     state: directory

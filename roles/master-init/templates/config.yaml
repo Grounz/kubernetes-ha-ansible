@@ -1,17 +1,7 @@
 apiVersion: kubeadm.k8s.io/v1alpha1
 kind: MasterConfiguration
-{% if ansible_hostname == "{{ hostname_master_1 }}" %}
 api:
-  advertiseAddress: {{ master_1_ip }}
-{% endif %}
-{% if ansible_hostname == "{{ hostname_master_2 }}" %}
-api:
-  advertiseAddress: {{ master_2_ip }}
-{% endif %}
-{% if ansible_hostname == "{{ hostname_master_3 }}" %}
-api:
-  advertiseAddress: {{ master_3_ip }}
-{% endif %}
+  advertiseAddress: {{ ansible_default_ipv4.address }}
 etcd:
   endpoints:
   - https://{{ master_1_ip }}:2379
