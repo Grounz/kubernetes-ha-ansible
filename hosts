@@ -11,10 +11,6 @@
 [Master-1]
 172.16.1.30 ansible_user=root ansible_connection=ssh ansible_hostname=Master-1
 
-[Master-2-3]
-172.16.1.31 ansible_user=root ansible_connection=ssh ansible_hostname=Master-2
-172.16.1.32 ansible_user=root ansible_connection=ssh ansible_hostname=Master-3
-
 [node]
 #172.16.1.23 ansible_user=root ansible_connection=ssh ansible_hostname=node-1
 #172.16.1.25 ansible_user=root ansible_connection=ssh ansible_hostname=node-2

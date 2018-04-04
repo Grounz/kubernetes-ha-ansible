@@ -2,6 +2,9 @@
 - hosts: all
   become: true
   connection: local
+  vars:
+    docker_ce_package: "docker-ce-17.03.2.ce-1.el7.centos.x86_64.rpm"
+    docker_ce_selinux_package: "docker-ce-selinux-17.03.2.ce-1.el7.centos.noarch.rpm"
   roles:
     - { role: docker, tags: ['docker', 'all-in', 'all']}
     - { role: configuration, tags: ['configuration', 'all-in', 'all']}
@@ -12,21 +15,21 @@
 
 - hosts: Master
   vars:
-    hostname_master_1: "{{ lookup('env', 'hostname_master_1') | default('Master-1')}}"
-    hostname_master_2: "{{ lookup('env', 'hostname_master_2') | default('Master-2')}}"
-    hostname_master_3: "{{ lookup('env', 'hostname_master_3') | default('Master-3')}}"
-    master_1_ip: "{{ lookup('env', 'master_1_ip') | default('172.16.1.30')}}"
-    master_2_ip: "{{ lookup('env', 'master_2_ip') | default('172.16.1.31')}}"
-    master_3_ip: "{{ lookup('env', 'master_3_ip') | default('172.16.1.32')}}"
-    virtual_ip: "{{ lookup('env', 'virtual_ip') | default('172.16.1.37')}}"
-    interface: "{{ lookup('env', 'virtual_ip') | default('enp0s3')}}"
-    priority_1: "{{ lookup('env', 'priority_1') | default('100')}}"
-    priority_2: "{{ lookup('env', 'priority_2') | default('101')}}"
-    state_master: "{{ lookup('env', 'state_master') | default('master')}}"
-    state_backup: "{{ lookup('env', 'state_backup') | default('BACKUP')}}"
-    auth_pass: "{{ lookup('env', 'auth_pass') | default('4be37dc3b4c90194d1600c483e10ad1d')}}"
-    pod_network_cidr: "{{ lookup('env', 'pod_network_cidr') | default('10.244.0.0/16')}}"
-    etcd_version: "{{ lookup('env', 'etcd_version') | default('v3.1.12')}}"
+    hostname_master_1: "Master-1"
+    hostname_master_2: "Master-2"
+    hostname_master_3: "Master-3"
+    master_1_ip: "172.16.1.30"
+    master_2_ip: "172.16.1.31"
+    master_3_ip: "172.16.1.32"
+    virtual_ip: "172.16.1.37"
+    interface: "enp0s3"
+    priority_1: 101
+    priority_2: 100
+    state_master: "master"
+    state_backup: "BACKUP"
+    auth_pass: "4be37dc3b4c90194d1600c483e10ad1d"
+    pod_network_cidr: "10.244.0.0/16"
+    etcd_version: "v3.1.12"
   roles:
    - { role: etcd-conf, tags: ['etcd-conf-master', 'master', 'all-in','all']}
    - { role: etcd-install-systemd, tags: ['etcd-install-master', 'master', 'all-in', 'all']}
