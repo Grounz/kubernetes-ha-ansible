@@ -3,5 +3,5 @@ services:
 
 before_install:
   - docker build -t gr0unz/kubernetes-ha-installer .
-  - docker login -u username_docker -p password_docker
+  - docker login -u $username_docker -p $password_docker
   - docker push gr0unz/kubernetes-ha-installer
