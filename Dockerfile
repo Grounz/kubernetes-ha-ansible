@@ -9,6 +9,7 @@ ENV BUILD_PACKAGES \
   openssh-client \
   sshpass \
   git \
+  rsync \
   python \
   py-boto \
   py-dateutil \
@@ -50,6 +51,10 @@ RUN set -x && \
     echo "localhost" >> /etc/ansible/hosts
 
 COPY . /ansible/playbooks/
+RUN chmod 755 /ansible/playbooks/entrypoint.sh && \
+    mkdir -p /root/.ssh
+ADD ./.ssh/id_rsa /root/.ssh/
+RUN chmod 500 /root/.ssh/id_rsa
 ENV ANSIBLE_GATHERING smart
 ENV ANSIBLE_HOST_KEY_CHECKING false
 ENV ANSIBLE_RETRY_FILES_ENABLED false
@@ -61,4 +66,4 @@ ENV ANSIBLE_LIBRARY /ansible/library
 
 WORKDIR /ansible/playbooks
 
-ENTRYPOINT ["ansible-playbook"]
+ENTRYPOINT ["/ansible/playbooks/entrypoint.sh"]

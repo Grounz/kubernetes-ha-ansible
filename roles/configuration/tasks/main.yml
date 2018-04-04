@@ -14,7 +14,7 @@
     mode: 0755
   with_items:
     - "https://pkg.cfssl.org/R1.2/cfssl_linux-amd64"
-    
+
 - name: copy kubernetes repo
   template:
     src: ../../templates/kubernetes.repo
